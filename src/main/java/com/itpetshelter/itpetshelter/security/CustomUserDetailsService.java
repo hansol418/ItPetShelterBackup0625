@@ -2,8 +2,11 @@ package com.itpetshelter.itpetshelter.security;
 
 
 import com.itpetshelter.itpetshelter.domain.Consumer;
+import com.itpetshelter.itpetshelter.domain.Manager;
 import com.itpetshelter.itpetshelter.repository.ConsumerRepository;
+import com.itpetshelter.itpetshelter.repository.ManagerRepository;
 import com.itpetshelter.itpetshelter.security.dto.ConsumerSecurityDTO;
+import com.itpetshelter.itpetshelter.security.dto.ManagerSecurityDTO;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -28,6 +31,9 @@ public class CustomUserDetailsService implements UserDetailsService {
     // MemberRepository 넣기.
     @Autowired
     private ConsumerRepository consumerRepository;
+
+    @Autowired
+    private ManagerRepository managerRepository;
 
     //생성자로 주입하기.
     public CustomUserDetailsService() {
@@ -60,7 +66,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
 
             //Manager 하나 더 추가.
-        Optional<Consumer> result2 = consumerRepository.getWithRoles(username);
+        Optional<Manager> result2 = managerRepository.getWithRoles(username);
 
 
             if(result2.isEmpty()){
@@ -71,11 +77,11 @@ public class CustomUserDetailsService implements UserDetailsService {
         // 디비에 해당 유저가 있다면, 이어서 로그인 처리하기.
         Consumer consumer = result.get();
         // 디비에서 Manager  가져오기
-//        Consumer consumer = result.get();
+
 
         // entity -> dto(UserDetails 타입), MemberSecurityDTO
         // 권한 관련 커스텀 마이징 하기 어려워서 -> 기존 A a = new A();
-//        MemberSecurityDTO memberSecurityDTO = MemberSecurityDTO.builder()
+//        MemberSecurityDTO managerSecurityDTO = MemberSecurityDTO.builder()
 //                .mid(member.getMid())
 //                .mpw(member.getMpw())
 //                .email(member.getEmail())
@@ -98,8 +104,19 @@ public class CustomUserDetailsService implements UserDetailsService {
                    memberRole -> new SimpleGrantedAuthority("ROLE_"+ memberRole.name())
            ).collect(Collectors.toList())
         );
-        log.info("CustomUserDetailsService loadUserByUsername memberSecurityDTO 확인 :" + consumerSecurityDTO);
+        log.info("CustomUserDetailsService loadUserByUsername managerSecurityDTO 확인 :" + consumerSecurityDTO);
 
         return consumerSecurityDTO;
     }
+    Manager manager = result2.get();
+    ManagerSecurityDTO managerSecurityDTO = new ManagerSecurityDTO(
+            manager.getMid(),
+            manager.getMpw(),
+            manager.getRoleSet().stream().map(
+                    memberRole -> new SimpleGrantedAuthority("ROLE_"+ memberRole.name())
+            ).collect(Collectors.toList())
+    );
+        log.info("CustomUserDetailsService loadUserByUsername memberSecurityDTO 확인 :" + managerSecurityDTO);
+
+        return managerSecurityDTO;
 }
